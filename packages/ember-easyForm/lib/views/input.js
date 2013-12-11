@@ -69,6 +69,12 @@ Ember.EasyForm.Input = Ember.EasyForm.BaseView.extend({
       }
     }
   },
+  //HACK:
+  showValidationErrorByObserving: function () {
+    this.set('hasFocusedOut', true);
+    this.showValidationError();
+  }.observes('context.errors.[]'),
+  //HACK:
   input: function() {
     this._keysForValidationDependencies.forEach(function(key) {
      this.get('parentView.childViews').forEach(function(view) {
