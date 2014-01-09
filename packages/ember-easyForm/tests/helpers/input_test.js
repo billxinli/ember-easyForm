@@ -1,4 +1,7 @@
-var model, Model, view, valid, container, controller, ErrorsObject, originalEmberWarn;
+var model, Model, view, valid, container, controller, ErrorsObject, originalEmberWarn,
+  set = Ember.set,
+  get = Ember.get;
+
 var templateFor = function(template) {
   return Ember.Handlebars.compile(template);
 };
@@ -17,10 +20,10 @@ function prepare(){
     var name = fullName.split(':')[1];
     return Ember.TEMPLATES[name];
   };
-  model = Ember.Object.create({
+  model = {
     firstName: 'Brian',
     lastName: 'Cardarella'
-  });
+  };
   controller = Ember.ObjectController.create({
     placeholder: 'A placeholder',
     label: 'A label',
@@ -78,12 +81,10 @@ test('does not render error tag when context does not have errors object', funct
 });
 
 test('renders error for invalid data', function() {
-  model.reopen({
-    errors: ErrorsObject.create()
-  });
+  model['errors'] = ErrorsObject.create();
 
   Ember.run(function() {
-    model.get('errors.firstName').pushObject("can't be blank");
+    get(model, 'errors.firstName').pushObject("can't be blank");
   });
 
   view = Ember.View.create({
@@ -109,7 +110,7 @@ test('renders error for invalid data', function() {
   equal(view.$().find('span.error').text(), "can't be blank");
 
   Ember.run(function() {
-    model.get('errors.firstName').clear();
+    get(model, 'errors.firstName').clear();
   });
   ok(!view.$().find('div.fieldWithErrors').get(0));
   ok(!view.$().find('span.error').get(0));
@@ -121,7 +122,7 @@ test('renders error for invalid data', function() {
   ok(!view.$().find('span.error').get(0));
 
   Ember.run(function() {
-    model.get('errors.firstName').pushObject("can't be blank");
+    get(model, 'errors.firstName').pushObject("can't be blank");
     view._childViews[0].trigger('input');
   });
   ok(!view.$().find('div.fieldWithErrors').get(0));
@@ -136,15 +137,13 @@ test('renders error for invalid data', function() {
 
 test('renders errors properly with dependent keys', function() {
   var passwordView, confirmationView;
-  model.reopen({
-    errors: ErrorsObject.create(),
-    _dependentValidationKeys: {
-      passwordConfirmation: ['password']
-    }
-  });
+  model['errors'] = ErrorsObject.create();
+  model['_dependentValidationKeys'] = {
+    passwordConfirmation: ['password']
+  };
 
   Ember.run(function() {
-    model.get('errors.passwordConfirmation').pushObject("does not match password");
+    get(model,'errors.passwordConfirmation').pushObject("does not match password");
   });
 
   view = Ember.View.create({
@@ -178,14 +177,14 @@ test('renders errors properly with dependent keys', function() {
   ok(confirmationView.$().find('span.error').get(0));
 
   Ember.run(function() {
-    model.get('errors.passwordConfirmation').clear();
+    get(model, 'errors.passwordConfirmation').clear();
     confirmationView.trigger('focusOut');
   });
   ok(!confirmationView.$().hasClass('fieldWithErrors'));
   ok(!confirmationView.$().find('span.error').get(0));
 
   Ember.run(function() {
-    model.get('errors.passwordConfirmation').pushObject("does not match password");
+    get(model, 'errors.passwordConfirmation').pushObject("does not match password");
     passwordView.trigger('input');
   });
   ok(confirmationView.$().hasClass('fieldWithErrors'));
@@ -229,7 +228,23 @@ test('block form for input', function() {
     controller: controller
   });
   append(view);
-  equal(view.$().find('label').text(), 'First name');
+
+  var input = view.$().find('input');
+  var label = view.$().find('label');
+
+  equal(label.text(), 'First name');
+  equal(input.val(), 'Brian');
+  equal(input.attr('type'), 'text');
+  equal(label.prop('for'), input.prop('id'));
+});
+
+test('block form for input without label', function() {
+  view = Ember.View.create({
+    template: templateFor('{{#input firstName}}{{input-field firstName}}{{/input}}'),
+    container: container,
+    controller: controller
+  });
+  append(view);
   equal(view.$().find('input').val(), 'Brian');
   equal(view.$().find('input').attr('type'), 'text');
 });
@@ -260,15 +275,13 @@ test('binds label to input field', function() {
 
 test('uses the wrapper config', function() {
   Ember.EasyForm.Config.registerWrapper('my_wrapper', {inputClass: 'my-input', errorClass: 'my-error', fieldErrorClass: 'my-fieldWithErrors'});
-  model.reopen({
-    errors: ErrorsObject.create()
-  });
+  model['errors'] = ErrorsObject.create();
 
   Ember.run(function() {
-    model.get('errors.firstName').pushObject("can't be blank");
+    get(model,'errors.firstName').pushObject("can't be blank");
   });
   view = Ember.View.create({
-    template: templateFor('{{#form-for controller wrapper="my_wrapper"}}{{input firstName}}{{/form-for}}'),
+    template: templateFor('{{#form-for model wrapper="my_wrapper"}}{{input firstName}}{{/form-for}}'),
     container: container,
     controller: controller
   });
@@ -283,15 +296,13 @@ test('uses the wrapper config', function() {
 
 test('wraps controls when defined', function() {
   Ember.EasyForm.Config.registerWrapper('my_wrapper', {wrapControls: true, controlsWrapperClass: 'my-wrapper'});
-  model.reopen({
-    errors: ErrorsObject.create()
-  });
+  model['errors'] = ErrorsObject.create();
 
   Ember.run(function() {
-    model.get('errors.firstName').pushObject("can't be blank");
+    get(model, 'errors.firstName').pushObject("can't be blank");
   });
   view = Ember.View.create({
-    template: templateFor('{{#form-for controller wrapper="my_wrapper"}}{{input firstName hint="my hint"}}{{/form-for}}'),
+    template: templateFor('{{#form-for model wrapper="my_wrapper"}}{{input firstName hint="my hint"}}{{/form-for}}'),
     container: container,
     controller: controller
   });
@@ -309,7 +320,7 @@ test('wraps controls when defined', function() {
 test('does not wrap controls when not defined', function() {
   Ember.EasyForm.Config.registerWrapper('my_wrapper', {wrapControls: false, controlsWrapperClass: 'my-wrapper'});
   view = Ember.View.create({
-    template: templateFor('{{#form-for controller wrapper="my_wrapper"}}{{input firstName hint="my hint"}}{{/form-for}}'),
+    template: templateFor('{{#form-for model wrapper="my_wrapper"}}{{input firstName hint="my hint"}}{{/form-for}}'),
     container: container,
     controller: controller
   });
@@ -370,15 +381,79 @@ test('sets select prompt property as bindings', function() {
   equal(view.$().find('.hint').text(), controller.get('hint'));
 });
 
-test('allows specifying the name property', function() {
+test('defaults the name property', function() {
   view = Ember.View.create({
-    template: templateFor('{{input firstName name="first-name"}}'),
+    template: templateFor('{{input firstName}}'),
     container: container,
     controller: controller
   });
   append(view);
 
-  equal(view.$().find('input').prop('name'), "first-name");
+  equal(view.$().find('input').prop('name'), "firstName");
+});
+
+test('allows specifying the name property', function() {
+  view = Ember.View.create({
+    template: templateFor('{{input firstName name="some-other-name"}}'),
+    container: container,
+    controller: controller
+  });
+  append(view);
+
+  equal(view.$().find('input').prop('name'), "some-other-name");
+});
+
+test('scopes property lookup to model declared in form-for', function(){
+  controller.set('someOtherModel', Ember.Object.create({firstName: 'Robert'}));
+
+  view = Ember.View.create({
+    template: templateFor('{{#form-for someOtherModel}}{{input firstName}}{{/form-for}}'),
+    container: container,
+    controller: controller
+  });
+  append(view);
+
+  equal(view.$().find('input').val(), "Robert");
+});
+
+test('can specify a property outside of the model if a keyword is used as a prefix', function(){
+  controller.set('someOtherModel', Ember.Object.create({firstName: 'Robert'}));
+
+  view = Ember.View.create({
+    template: templateFor('{{#form-for someOtherModel}}{{input controller.firstName}}{{/form-for}}'),
+    container: container,
+    controller: controller
+  });
+  append(view);
+
+  equal(view.$().find('input').val(), "Brian");
+});
+
+test('select collection can use controller scope if prefix', function() {
+  controller.set('someOtherModel', Ember.Object.create({ city: 'Ocala' }));
+
+  controller.set('cities', Ember.A("Boston Ocala Portland".w()));
+
+  view = Ember.View.create({
+    template: templateFor('{{#form-for someOtherModel}}{{input city as="select" collection="controller.cities"}}{{/form-for}}'),
+    container: container,
+    controller: controller
+  });
+  append(view);
+
+  equal(view.$('option').text(), "BostonOcalaPortland");
+  equal(view.$('option:selected').text(), "Ocala");
+});
+
+test('sets input as="date" attributes properly', function() {
+  view = Ember.View.create({
+    template: templateFor('{{input receiveAt as="date"}}'),
+    container: container,
+    controller: controller
+  });
+  append(view);
+  var input = view.$().find('input');
+  equal(input.prop('type'), 'date');
 });
 
 module('{{input}} without property argument', {

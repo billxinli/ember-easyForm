@@ -3,7 +3,7 @@ Ember.EasyForm.Input = Ember.EasyForm.BaseView.extend({
     this._super();
     this.classNameBindings.push('showError:' + this.getWrapperConfig('fieldErrorClass'));
     this.classNames.push(this.getWrapperConfig('inputClass'));
-    Ember.defineProperty(this, 'showError', Ember.computed.and('canShowValidationError', 'context.errors.' + this.property + '.firstObject'));
+    Ember.defineProperty(this, 'showError', Ember.computed.and('canShowValidationError', 'formForModel.errors.' + this.property + '.firstObject'));
     if (!this.isBlock) {
       if (this.getWrapperConfig('wrapControls')) {
         this.set('templateName', 'easyForm/wrapped_input');
@@ -13,7 +13,7 @@ Ember.EasyForm.Input = Ember.EasyForm.BaseView.extend({
     }
   },
   setupValidationDependencies: function() {
-    var keys = this.get('context._dependentValidationKeys'), key;
+    var keys = this.get('formForModel._dependentValidationKeys'), key;
     if (keys) {
       for(key in keys) {
         if (keys[key].contains(this.property)) {
@@ -27,16 +27,26 @@ Ember.EasyForm.Input = Ember.EasyForm.BaseView.extend({
   tagName: 'div',
   classNames: ['string'],
   didInsertElement: function() {
-    this.set('label-field-'+this.elementId+'.for', this.get('input-field-'+this.elementId+'.elementId'));
+    var name = 'label-field-'+this.elementId,
+        label = this.get(name);
+    if (!label) { return; }
+    this.set(name+'.for', this.get('input-field-'+this.elementId+'.elementId'));
   },
   concatenatedProperties: ['inputOptions', 'bindableInputOptions'],
   inputOptions: ['as', 'collection', 'optionValuePath', 'optionLabelPath', 'selection', 'value', 'multiple', 'name'],
   bindableInputOptions: ['placeholder', 'prompt'],
+  defaultOptions: {
+    name: function(){
+      if (this.property) {
+        return this.property;
+      }
+    }
+  },
   controlsWrapperClass: function() {
     return this.getWrapperConfig('controlsWrapperClass');
   }.property(),
   inputOptionsValues: function() {
-    var options = {}, i, key, keyBinding, inputOptions = this.inputOptions, bindableInputOptions = this.bindableInputOptions;
+    var options = {}, i, key, keyBinding, value, inputOptions = this.inputOptions, bindableInputOptions = this.bindableInputOptions, defaultOptions = this.defaultOptions;
     for (i = 0; i < inputOptions.length; i++) {
       key = inputOptions[i];
       if (this[key]) {
@@ -54,6 +64,16 @@ Ember.EasyForm.Input = Ember.EasyForm.BaseView.extend({
         options[keyBinding] = 'view.' + key;
       }
     }
+
+    for (key in defaultOptions) {
+      if (!defaultOptions.hasOwnProperty(key)) { continue; }
+      if (options[key]) { continue; }
+
+      if (value = defaultOptions[key].apply(this)) {
+        options[key] = value;
+      }
+    }
+
     return options;
   }.property(),
   focusOut: function() {
@@ -62,7 +82,7 @@ Ember.EasyForm.Input = Ember.EasyForm.BaseView.extend({
   },
   showValidationError: function() {
     if (this.get('hasFocusedOut')) {
-      if (Ember.isEmpty(this.get('context.errors.' + this.property))) {
+      if (Ember.isEmpty(this.get('formForModel.errors.' + this.property))) {
         this.set('canShowValidationError', false);
       } else {
         this.set('canShowValidationError', true);

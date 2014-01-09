@@ -1,9 +1,11 @@
-var model, Model, view, container, controller, valid, countries;
+var model, view, container, controller, valid, countries,
+  get = Ember.get,
+  set = Ember.set;
+
 var templateFor = function(template) {
   return Ember.Handlebars.compile(template);
 };
 var original_lookup = Ember.lookup, lookup;
-Model = Ember.Object.extend();
 
 module('input-field helpers', {
   setup: function() {
@@ -13,13 +15,13 @@ module('input-field helpers', {
       var name = fullName.split(':')[1];
       return Ember.TEMPLATES[name];
     };
-    countries = [Model.create({ id: 1, name: 'South Aftica' }), Model.create({ id: 2, name: 'United States' })];
+    countries = [{ id: 1, name: 'South Aftica' }, { id: 2, name: 'United States' }];
 
-    model = Model.create({
+    model = {
       firstName: 'Brian',
       lastName: 'Cardarella',
       country: countries[1]
-    });
+    };
 
     controller = Ember.ObjectController.create();
     controller.set('content', model);
@@ -71,7 +73,7 @@ test('auto sets input type to password if name includes password', function() {
   equal(view.$().find('input').attr('type'), 'password');
 });
 
-test('auto sets input type to password if forced to passwordr', function() {
+test('auto sets input type to password if forced to password', function() {
   view = Ember.View.create({
     template: templateFor('{{input-field token as="password"}}'),
     container: container,
@@ -182,15 +184,13 @@ test('auto sets input type to email if forced to email', function() {
 });
 
 test('auto sets input type to number if property meta attribute is a number', function() {
-   model.reopen({
-    metaForProperty: function(property) {
-      var obj = { 'type': 'number' };
-      if (property === 'age') {
-        return obj;
-      }
+  model['metaForProperty'] = function(property) {
+    var obj = { 'type': 'number' };
+    if (property === 'age') {
+      return obj;
     }
-  });
-  model.set('age', 30);
+  };
+  set(model,'age', 30);
   view = Ember.View.create({
     template: templateFor('{{input-field age}}'),
     container: container,
@@ -201,7 +201,7 @@ test('auto sets input type to number if property meta attribute is a number', fu
 });
 
 test('auto sets input type to number if property is a number', function() {
-  model.set('age', 30);
+  set(model,'age', 30);
   view = Ember.View.create({
     template: templateFor('{{input-field age}}'),
     container: container,
@@ -212,15 +212,13 @@ test('auto sets input type to number if property is a number', function() {
 });
 
 test('auto sets input type to date if property meta attribute is a date', function() {
-  model.reopen({
-    metaForProperty: function(property) {
-      var obj = { 'type': 'date' };
-      if (property === 'birthday') {
-        return obj;
-      }
+  model['metaForProperty'] = function(property) {
+    var obj = { 'type': 'date' };
+    if (property === 'birthday') {
+      return obj;
     }
-  });
-  model.set('birthday', new Date());
+  };
+  set(model,'birthday', new Date());
   view = Ember.View.create({
     template: templateFor('{{input-field birthday}}'),
     container: container,
@@ -231,7 +229,7 @@ test('auto sets input type to date if property meta attribute is a date', functi
 });
 
 test('auto sets input type to checkbox if forced to checkbox', function() {
-  model.set('alive', true);
+  set(model,'alive', true);
   view = Ember.View.create({
     template: templateFor('{{input-field alive as="checkbox"}}'),
     container: container,
@@ -243,15 +241,13 @@ test('auto sets input type to checkbox if forced to checkbox', function() {
 });
 
 test('auto sets input type to checkbox if property meta attribute is a boolean', function() {
-  model.reopen({
-    metaForProperty: function(property) {
-      var obj = { 'type': 'boolean' };
-      if (property === 'old') {
-        return obj;
-      }
+  model['metaForProperty'] = function(property) {
+    var obj = { 'type': 'boolean' };
+    if (property === 'old') {
+      return obj;
     }
-  });
-  model.set('old', false);
+  };
+  set(model,'old', false);
   view = Ember.View.create({
     template: templateFor('{{input-field old}}'),
     container: container,
@@ -262,7 +258,7 @@ test('auto sets input type to checkbox if property meta attribute is a boolean',
 });
 
 test('auto sets input type to number if property is a number', function() {
-  model.set('age', 30);
+  set(model,'age', 30);
   view = Ember.View.create({
     template: templateFor('{{input-field age}}'),
     container: container,
@@ -361,4 +357,24 @@ test('generates a select input correct value', function() {
 
   append(view);
   ok(view.$().find('select option:selected').html().match(/United States/));
+});
+
+test('auto sets input type to date', function() {
+  view = Ember.View.create({
+    template: templateFor('{{input-field receivedAt as="date"}}'),
+    container: container,
+    controller: controller
+  });
+  append(view);
+  equal(view.$().find('input').attr('type'), 'date');
+});
+
+test('auto sets input type to time', function() {
+  view = Ember.View.create({
+    template: templateFor('{{input-field receivedAt as="time"}}'),
+    container: container,
+    controller: controller
+  });
+  append(view);
+  equal(view.$().find('input').attr('type'), 'time');
 });
