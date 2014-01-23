@@ -1,1 +1,1 @@
-Ember.TEMPLATES['easyForm/error'] = Ember.Handlebars.compile('{{view.errors.firstObject}}');
+Ember.EasyForm.Config.registerTemplate('easyForm/error', Ember.Handlebars.compile('{{view.errorText.message}}'));

@@ -1,1 +1,1 @@
-Ember.TEMPLATES['easyForm/input'] = Ember.Handlebars.compile('{{label-field propertyBinding="view.property" textBinding="view.label" translationBinding="view.translation" classNames="col-sm-2"}}{{partial "easyForm/inputControls"}}');
+Ember.EasyForm.Config.registerTemplate('easyForm/input', Ember.Handlebars.compile('{{label-field propertyBinding="view.property" textBinding="view.label" translationBinding="view.translation" classNames="col-sm-2"}}{{partial "easyForm/inputControls"}}'));

@@ -1,1 +1,1 @@
-Ember.TEMPLATES['easyForm/wrapped_input'] = Ember.Handlebars.compile('{{label-field propertyBinding="view.property" textBinding="view.label" translationBinding="view.translation"}}<div class="{{unbound view.controlsWrapperClass}}">{{partial "easyForm/inputControls"}}</div>');
+Ember.EasyForm.Config.registerTemplate('easyForm/wrapped_input', Ember.Handlebars.compile('{{label-field propertyBinding="view.property" textBinding="view.label" translationBinding="view.translation"}}<div class="{{unbound view.controlsWrapperClass}}">{{partial "easyForm/inputControls"}}</div>'));
